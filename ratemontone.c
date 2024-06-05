@@ -1,128 +1,76 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-void
-sort (int proc[], int b[], int pt[], int n)
+#include<stdio.h>
+void sort(int proc_id[],int at[],int bt[],int n)
 {
-  int temp = 0;
-  for (int i = 0; i < n; i++)
-	{
-	  for (int j = i; j < n; j++)
-		{
-		  if (pt[j] < pt[i])
-			{
-			  temp = pt[i];
-			  pt[i] = pt[j];
-			  pt[j] = temp;
-			  temp = b[j];
-			  b[j] = b[i];
-			  b[i] = temp;
-			  temp = proc[i];
-			  proc[i] = proc[j];
-			  proc[j] = temp;
-			}
-		}
-	}
+ int temp=0;
+ for(int i=0;i<n;i++)
+ {
+ for(int j=i;j<n;j++)
+ {
+ if(at[j]<at[i])
+ {
+ temp=at[i];at[i]=at[j];at[j]=temp;
+ temp=bt[j];bt[j]=bt[i];bt[i]=temp;
+ temp=proc_id[i];proc_id[i]=proc_id[j];proc_id[j]=temp;
+ }
+ }
+ }
 }
-
-int
-gcd (int a, int b)
+void fcfs(int at[],int bt[],int ct[],int tat[],int wt[],int n,int *c)
 {
-  int r;
-  while (b > 0)
-	{
-	  r = a % b;
-	  a = b;
-	  b = r;
-	}
-  return a;
+ double ttat=0.0,twt=0.0;
+ //completion time
+ for(int i=0;i<n;i++)
+ {
+ if(*c>=at[i])
+ *c+=bt[i];
+ else
+ *c+=at[i]-ct[i-1]+bt[i];
+ ct[i]=*c;
+ }
+ //turnaround time
+ for(int i=0;i<n;i++)
+ tat[i]=ct[i]-at[i];
+ //waiting time
+ for(int i=0;i<n;i++)
+ wt[i]=tat[i]-bt[i];
 }
-
-int
-lcmul (int p[], int n)
+void main()
 {
-  int lcm = p[0];
-  for (int i = 1; i < n; i++)
-	{
-	  lcm = (lcm * p[i]) / gcd (lcm, p[i]);
-	}
-  return lcm;
-}
+ int sn,un,c=0;int n=0;
+ printf("Enter number of system processes: ");
+ scanf("%d",&sn);n=sn;
+ int sproc_id[n],sat[n],sbt[n],sct[n],stat[n],swt[n];
+ for(int i=0;i<sn;i++)
+ sproc_id[i]=i+1;
+ printf("Enter arrival times of the system processes:\n");
+ for(int i=0;i<sn;i++)
+ scanf("%d",&sat[i]);
+ printf("Enter burst times of the system processes:\n");
+ for(int i=0;i<sn;i++)
+ scanf("%d",&sbt[i]);
 
+ printf("Enter number of user processes: ");
+ scanf("%d",&un);n=un;
+ int uproc_id[n],uat[n],ubt[n],uct[n],utat[n],uwt[n];
+ for(int i=0;i<un;i++)
+ uproc_id[i]=i+1;
+ printf("Enter arrival times of the user processes:\n");
+ for(int i=0;i<un;i++)
+ scanf("%d",&uat[i]);
+ printf("Enter burst times of the user processes:\n");
+ for(int i=0;i<un;i++)
+ scanf("%d",&ubt[i]);
+ sort(sproc_id,sat,sbt,sn);
+ sort(uproc_id,uat,ubt,un);
 
-void
-main ()
-{
-  int n;
-  printf ("Enter the number of processes:");
-  scanf ("%d", &n);
-  int proc[n], b[n], pt[n], rem[n];
-  printf ("Enter the CPU burst times:\n");
-  for (int i = 0; i < n; i++)
-	{
-	  scanf ("%d", &b[i]);
-	  rem[i] = b[i];
-	}
-  printf ("Enter the time periods:\n");
-  for (int i = 0; i < n; i++)
-	scanf ("%d", &pt[i]);
-  for (int i = 0; i < n; i++)
-	proc[i] = i + 1;
-
-  sort (proc, b, pt, n);
-  //LCM
-  int l = lcmul (pt, n);
-  printf ("LCM=%d\n", l);
-
-  printf ("\nRate Monotone Scheduling:\n");
-  printf ("PID\t Burst\tPeriod\n");
-  for (int i = 0; i < n; i++)
-	printf ("%d\t\t%d\t\t%d\n", proc[i], b[i], pt[i]);
-
-  //feasibility
-  double sum = 0.0;
-  for (int i = 0; i < n; i++)
-	{
-	  sum += (double) b[i] / pt[i];
-	}
-  double rhs = n * (pow (2.0, (1.0 / n)) - 1.0);
-  printf ("\n%lf <= %lf =>%s\n", sum, rhs, (sum <= rhs) ? "true" : "false");
-  if (sum > rhs)
-	exit (0);
-
-  printf ("Scheduling occurs for %d ms\n\n", l);
-
-  //RMS 
-  int time = 0, prev = 0, x = 0;
-  while (time < l)
-	{
-	  int f = 0;
-	  for (int i = 0; i < n; i++)
-		{
-		  if (time % pt[i] == 0)
-			rem[i] = b[i];
-		  if (rem[i] > 0)
-			{
-			  if (prev != proc[i])
-				{
-				  printf ("%dms onwards: Process %d running\n", time,
-						  proc[i]);
-				  prev = proc[i];
-				}
-			  rem[i]--;
-			  f = 1;
-			  break;
-			  x = 0;
-			}
-		}
-	  if (!f)
-		{
-		  if (x != 1)
-			{
-			  printf ("%dms onwards: CPU is idle\n", time);
-			  x = 1;
-			}
-		}
-	  time++;
-	}
+ fcfs(sat,sbt,sct,stat,swt,sn,&c);
+ fcfs(uat,ubt,uct,utat,uwt,un,&c);
+ printf("\nScheduling:\n");
+ printf("System processes:\n");
+ printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
+ for(int i=0;i<sn;i++)
+ printf("%d\t%d\t%d\t%d\t%d\t%d\n",sproc_id[i],sat[i],sbt[i],sct[i],stat[i],swt[i]);
+ printf("User processes:\n");
+ for(int i=0;i<un;i++)
+ printf("%d\t%d\t%d\t%d\t%d\t%d\n",uproc_id[i],uat[i],ubt[i],uct[i],utat[i],uwt[i]);
 }
